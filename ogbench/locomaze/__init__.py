@@ -117,6 +117,16 @@ register(
     ),
 )
 register(
+    id='antmaze-colossal-v0',
+    entry_point='ogbench.locomaze.maze:make_maze_env',
+    max_episode_steps=2000,
+    kwargs=dict(
+        loco_env_type='ant',
+        maze_env_type='maze',
+        maze_type='colossal',
+    ),
+)
+register(
     id='antmaze-teleport-v0',
     entry_point='ogbench.locomaze.maze:make_maze_env',
     max_episode_steps=1000,
@@ -183,7 +193,7 @@ register(
 register(
     id='humanoidmaze-giant-v0',
     entry_point='ogbench.locomaze.maze:make_maze_env',
-    max_episode_steps=4000,
+    max_episode_steps=2000,
     kwargs=dict(
         loco_env_type='humanoid',
         maze_env_type='maze',
