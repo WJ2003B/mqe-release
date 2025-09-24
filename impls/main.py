@@ -29,9 +29,9 @@ flags.DEFINE_string('save_dir', 'exp/', 'Save directory.')
 flags.DEFINE_string('restore_path', None, 'Restore path.')
 flags.DEFINE_integer('restore_epoch', None, 'Restore epoch.')
 
-flags.DEFINE_integer('train_steps', 5_000_000, 'Number of training steps.')
+flags.DEFINE_integer('train_steps', 10_000_000, 'Number of training steps.')
 flags.DEFINE_integer('log_interval', 5000, 'Logging interval.')
-flags.DEFINE_integer('eval_interval', 500_000, 'Evaluation interval.')
+flags.DEFINE_integer('eval_interval', 1_000_000, 'Evaluation interval.')
 flags.DEFINE_integer('save_interval', 1000000, 'Saving interval.')
 flags.DEFINE_integer('replace_interval', 4000, 'Replace for a new dataset')
 
@@ -51,11 +51,16 @@ def main(_):
     os.environ['MUJOCO_GL'] = 'egl'
     if 'SLURM_STEP_GPUS' in os.environ:
         os.environ['EGL_DEVICE_ID'] = os.environ['SLURM_STEP_GPUS']
-    exp_name = get_exp_name(FLAGS.seed)
+    if 'SLURM_JOB_ID' in os.environ:
+        job_id = f's_{os.environ["SLURM_JOB_ID"]}.'
+    else:
+        job_id = ''
+        
     exp_name = get_exp_name(FLAGS.seed)
     seed = exp_name.split("_")[0]
-    exp_name =  FLAGS.dataset_path[:-4].split("/")[-1] + "_" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "_" + seed
-    setup_wandb(project='CMD', group=FLAGS.run_group, name=exp_name)
+    exp_name =  FLAGS.dataset_path[:-4].split("/")[-1] + "_" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "_" + seed + job_id
+    run_group = datetime.datetime.now().strftime("%Y-%m-%d")
+    setup_wandb(project='CMD_Scaling', group=run_group, name=exp_name)
 
     FLAGS.save_dir = os.path.join(FLAGS.save_dir, wandb.run.project, FLAGS.run_group, exp_name)
     os.makedirs(FLAGS.save_dir, exist_ok=True)
