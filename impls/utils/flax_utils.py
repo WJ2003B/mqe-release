@@ -12,6 +12,9 @@ import optax
 
 nonpytree_field = functools.partial(flax.struct.field, pytree_node=False)
 
+class DualOptimizer():
+    def __init__(self, optimizer, dual_optimizer):
+        pass
 
 class ModuleDict(nn.Module):
     """A dictionary of modules.
