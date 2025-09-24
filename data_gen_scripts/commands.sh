@@ -33,6 +33,8 @@ python generate_locomaze.py --env_name=antmaze-medium-v0 --save_path=data/antmaz
 python generate_locomaze.py --env_name=antmaze-large-v0 --save_path=data/antmaze-large-navigate-v0.npz --dataset_type=navigate --num_episodes=1000 --max_episode_steps=1001 --restore_path=experts/ant --restore_epoch=400000
 # antmaze-giant-navigate-v0
 python generate_locomaze.py --env_name=antmaze-giant-v0 --save_path=data/antmaze-giant-navigate-v0.npz --dataset_type=navigate --num_episodes=500 --max_episode_steps=2001 --restore_path=experts/ant --restore_epoch=400000
+# antmaze-colossal-navigate-v0
+python generate_locomaze.py --env_name=antmaze-colossal-v0 --save_path=data/antmaze-colossal-navigate-v0.npz --dataset_type=navigate --num_episodes=500 --max_episode_steps=2001 --restore_path=experts/ant --restore_epoch=400000
 # antmaze-teleport-navigate-v0
 python generate_locomaze.py --env_name=antmaze-teleport-v0 --save_path=data/antmaze-teleport-navigate-v0.npz --dataset_type=navigate --num_episodes=1000 --max_episode_steps=1001 --restore_path=experts/ant --restore_epoch=400000
 # antmaze-medium-stitch-v0
@@ -41,6 +43,8 @@ python generate_locomaze.py --env_name=antmaze-medium-v0 --save_path=data/antmaz
 python generate_locomaze.py --env_name=antmaze-large-v0 --save_path=data/antmaze-large-stitch-v0.npz --dataset_type=stitch --num_episodes=5000 --max_episode_steps=201 --restore_path=experts/ant --restore_epoch=400000
 # antmaze-giant-stitch-v0
 python generate_locomaze.py --env_name=antmaze-giant-v0 --save_path=data/antmaze-giant-stitch-v0.npz --dataset_type=stitch --num_episodes=5000 --max_episode_steps=201 --restore_path=experts/ant --restore_epoch=400000
+# antmaze-colossal-stitch-v0
+python generate_locomaze.py --env_name=antmaze-colossal-v0 --save_path=data/antmaze-colossal-stitch-v0.npz --dataset_type=stitch --num_episodes=5000 --max_episode_steps=201 --restore_path=experts/ant --restore_epoch=400000
 # antmaze-teleport-stitch-v0
 python generate_locomaze.py --env_name=antmaze-teleport-v0 --save_path=data/antmaze-teleport-stitch-v0.npz --dataset_type=stitch --num_episodes=5000 --max_episode_steps=201 --restore_path=experts/ant --restore_epoch=400000
 # antmaze-medium-explore-v0
@@ -55,7 +59,7 @@ python generate_locomaze.py --env_name=humanoidmaze-medium-v0 --save_path=data/h
 # humanoidmaze-large-navigate-v0
 python generate_locomaze.py --env_name=humanoidmaze-large-v0 --save_path=data/humanoidmaze-large-navigate-v0.npz --dataset_type=navigate --num_episodes=1000 --max_episode_steps=2001 --restore_path=experts/humanoid --restore_epoch=40000000
 # humanoidmaze-giant-navigate-v0
-python generate_locomaze.py --env_name=humanoidmaze-giant-v0 --save_path=data/humanoidmaze-giant-navigate-v0.npz --dataset_type=navigate --num_episodes=1000 --max_episode_steps=4001 --restore_path=experts/humanoid --restore_epoch=40000000
+python generate_locomaze.py --env_name=humanoidmaze-giant-v0 --save_path=data/humanoidmaze-giant-navigate-v0.npz --dataset_type=navigate --num_episodes=2500 --max_episode_steps=4001 --restore_path=experts/humanoid --restore_epoch=40000000
 # humanoidmaze-medium-stitch-v0
 python generate_locomaze.py --env_name=humanoidmaze-medium-v0 --save_path=data/humanoidmaze-medium-stitch-v0.npz --dataset_type=stitch --num_episodes=5000 --max_episode_steps=401 --restore_path=experts/humanoid --restore_epoch=40000000
 # humanoidmaze-large-stitch-v0

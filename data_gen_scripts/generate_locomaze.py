@@ -2,14 +2,15 @@ import glob
 import json
 import pathlib
 from collections import defaultdict
+import os
 
 import gymnasium
 import numpy as np
 from absl import app, flags
-from agents import SACAgent
+from impls.agents import SACAgent
 from tqdm import trange
-from utils.evaluation import supply_rng
-from utils.flax_utils import restore_agent
+from impls.utils.evaluation import supply_rng
+from impls.utils.flax_utils import restore_agent
 
 import ogbench.locomaze  # noqa
 
@@ -18,16 +19,17 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('seed', 0, 'Random seed.')
 flags.DEFINE_string('env_name', 'antmaze-large-v0', 'Environment name.')
 flags.DEFINE_string('dataset_type', 'navigate', 'Dataset type.')
-flags.DEFINE_string('restore_path', 'experts/ant', 'Expert agent restore path.')
+flags.DEFINE_string('restore_path', '/nas/ucb/billz/ogbench/experts/ant', 'Expert agent restore path.')
 flags.DEFINE_integer('restore_epoch', 400000, 'Expert agent restore epoch.')
 flags.DEFINE_string('save_path', None, 'Save path.')
 flags.DEFINE_float('noise', 0.2, 'Gaussian action noise level.')
 flags.DEFINE_integer('num_episodes', 1000, 'Number of episodes.')
-flags.DEFINE_integer('max_episode_steps', 1001, 'Maximum number of steps in an episode.')
+flags.DEFINE_integer('max_episode_steps', 2001, 'Maximum number of steps in an episode.')
 
 
 def main(_):
     assert FLAGS.dataset_type in ['path', 'navigate', 'stitch', 'explore']
+    os.environ['MUJOCO_GL'] = 'egl'
     # 'path': Reach a single goal and stay there.
     # 'navigate': Repeatedly reach randomly sampled goals in a single episode.
     # 'stitch': Reach a nearby goal that is 4 cells away and stay there.

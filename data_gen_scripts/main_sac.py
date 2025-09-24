@@ -8,13 +8,13 @@ import numpy as np
 import tqdm
 import wandb
 from absl import app, flags
-from agents import agents
+from impls.agents import agents
 from ml_collections import config_flags
 from online_env_utils import make_online_env
-from utils.datasets import ReplayBuffer
-from utils.evaluation import evaluate, flatten
-from utils.flax_utils import restore_agent, save_agent
-from utils.log_utils import CsvLogger, get_exp_name, get_flag_dict, get_wandb_video, setup_wandb
+from impls.utils.datasets import ReplayBuffer
+from impls.utils.evaluation import evaluate, flatten
+from impls.utils.flax_utils import restore_agent, save_agent
+from impls.utils.log_utils import CsvLogger, get_exp_name, get_flag_dict, get_wandb_video, setup_wandb
 from viz_utils import visualize_trajs
 
 FLAGS = flags.FLAGS
@@ -39,9 +39,9 @@ flags.DEFINE_integer('terminate_at_end', 0, 'Whether to set terminated=True when
 flags.DEFINE_integer('eval_episodes', 50, 'Number of episodes for each task.')
 flags.DEFINE_float('eval_temperature', 0, 'Actor temperature for evaluation.')
 flags.DEFINE_float('eval_gaussian', None, 'Action Gaussian noise for evaluation.')
-flags.DEFINE_integer('video_episodes', 1, 'Number of video episodes for each task.')
+flags.DEFINE_integer('video_episodes', 0, 'Number of video episodes for each task.')
 flags.DEFINE_integer('video_frame_skip', 3, 'Frame skip for videos.')
-flags.DEFINE_integer('eval_on_cpu', 1, 'Whether to evaluate on CPU.')
+flags.DEFINE_integer('eval_on_cpu', 0, 'Whether to evaluate on CPU.')
 
 config_flags.DEFINE_config_file('agent', '../impls/agents/sac.py', lock_config=False)
 
