@@ -19,8 +19,8 @@ from utils.networks import (
 )
 
 
-class MDWAgent(flax.struct.PyTreeNode):
-    """Metric Distillation via Waypoints (MDW) agent."""
+class MQEAgent(flax.struct.PyTreeNode):
+    """Multistep Quasimetric Estimation (MQE) agent."""
 
     rng: Any
     network: Any
