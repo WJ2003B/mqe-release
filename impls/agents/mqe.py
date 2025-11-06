@@ -449,7 +449,7 @@ def get_config():
     config = ml_collections.ConfigDict(
         dict(
             # Agent hyperparameters.
-            agent_name='tmd',  # Agent name.
+            agent_name='mqe',  # Agent name.
             lr=3e-4,
             weight_decay=1e-4, # weight decay for adamw
             components=8,  # Number of components to average in the MRN/IQE distance ensemble.
