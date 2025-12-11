@@ -19,7 +19,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_integer('seed', 0, 'Random seed.')
 flags.DEFINE_string('env_name', 'antmaze-large-v0', 'Environment name.')
 flags.DEFINE_string('dataset_type', 'navigate', 'Dataset type.')
-flags.DEFINE_string('restore_path', '/nas/ucb/billz/ogbench/experts/ant', 'Expert agent restore path.')
+flags.DEFINE_string('restore_path', None, 'Expert agent restore path.')
 flags.DEFINE_integer('restore_epoch', 400000, 'Expert agent restore epoch.')
 flags.DEFINE_string('save_path', None, 'Save path.')
 flags.DEFINE_float('noise', 0.2, 'Gaussian action noise level.')
