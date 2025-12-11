@@ -34,26 +34,23 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
     rng: Any
     network: Any
     config: Any = nonpytree_field()
-    zeta_schedule: Any = nonpytree_field()
 
     @jax.jit
     def mrn_distance(self, x, y):
+        
         K = self.config['components']
         assert x.shape[-1] % K == 0
         # K = 8
-        @jax.jit
-        def mrn_distance_component(x, y):
-            eps = 1e-6
-            d = x.shape[-1]
-            mask = jnp.arange(d) < d // 2
-            max_component = jnp.max(jax.nn.relu((x - y) * mask), axis=-1)
-            l2_component = jnp.sqrt(jnp.square((x - y) * (1 - mask)).sum(axis=-1) + eps)
-            assert max_component.shape == l2_component.shape
-            return max_component + l2_component
+        # @jax.jit
+        # def mrn_distance_component(x, y):
+        #     eps = 1e-6
+        #     max_component = jnp.max(jax.nn.relu((x - y)), axis=-1)
+        #     return max_component #+ l2_component
 
         x_split = jnp.stack(jnp.split(x, K, axis=-1), axis=-1)
         y_split = jnp.stack(jnp.split(y, K, axis=-1), axis=-1)
-        dists = jax.vmap(mrn_distance_component, in_axes=(-1, -1), out_axes=-1)(x_split, y_split)
+        fn = lambda x, y: jnp.max(jax.nn.relu((x - y)), axis=-1)
+        dists = jax.vmap(fn, in_axes=(-1, -1), out_axes=-1)(x_split, y_split)
         # print(dists.shape)
         #[self.mrn_distance_component(x_split[..., i], y_split[..., i]) for i in range(K)]
 
@@ -79,7 +76,7 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
 
         phi = self.get_phi(phi_, psi_s)
 
-        if len(phi.shape) == 2:  # Non-ensemble
+        if not self.config['ensemble']:  # Non-ensemble
             phi = phi[None, ...]
             psi_s = psi_s[None, ...]
             psi_next = psi_next[None, ...]
@@ -123,7 +120,7 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
 
         critic_loss = (
             contrastive_loss
-            + zeta * action_invariance_loss
+            # + zeta * action_invariance_loss
             + zeta * backup_loss
         )
 
@@ -149,7 +146,7 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
     def actor_loss(self, batch, grad_params, rng):
         """Compute the FQL actor loss."""
         batch_size, action_dim = batch['actions'].shape
-        rng, x_rng, t_rng, a_rng = jax.random.split(rng, 4)
+        rng, x_rng, t_rng = jax.random.split(rng, 3)
 
         # BC flow loss.
         x_0 = jax.random.normal(x_rng, (batch_size, action_dim))
@@ -157,49 +154,6 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
         t = jax.random.uniform(t_rng, (batch_size, 1))
         x_t = (1 - t) * x_0 + t * x_1
         vel = x_1 - x_0
-
-        # if self.config["direct_optimization"]:
-        #     # no distillation
-        #     if self.config['use_latent']:
-        #         psi_s = self.network.select('psi')(batch['observations'], params=grad_params)
-        #         psi_g = self.network.select('psi')(batch['actor_goals'], params=grad_params)
-        #         if len(psi_g.shape) == 3:
-        #             psi_s = jnp.mean(psi_s, axis=0)
-        #             psi_g = jnp.mean(psi_g, axis=0)
-        #         if self.config['freeze_enc_for_actor_grad']:
-        #             psi_g = jax.lax.stop_gradient(psi_g)
-        #             psi_s = jax.lax.stop_gradient(psi_s)
-        #         pred = self.network.select('actor_bc_flow')(psi_s, x_t, psi_g, t, params=grad_params)
-        #         bc_flow_loss = jnp.mean((pred - vel) ** 2)
-        #         actor_actions = self.compute_flow_actions(psi_s, psi_g, noises=jax.random.normal(a_rng, (batch_size, action_dim)))
-        #     else:
-        #         pred = self.network.select('actor_bc_flow')(batch['observations'], x_t, batch["actor_goals"], t, params=grad_params)
-        #         bc_flow_loss = jnp.mean((pred - vel) ** 2)
-        #         actor_actions = self.compute_flow_actions(batch['observations'], batch["actor_goals"], noises=jax.random.normal(a_rng, (batch_size, action_dim)))
-            
-        #     # Q loss.
-        #     actor_actions = jnp.clip(actor_actions, -1, 1)
-        #     phi = self.network.select('phi')(batch['observations'], actor_actions)
-        #     psi = self.network.select('psi')(batch['actor_goals'])
-        #     q1, q2 = -self.mrn_distance(phi, psi)
-        #     q = jnp.minimum(q1, q2)
-        #     q_loss = -q.mean()
-        #     if self.config['normalize_q_loss']:
-        #         lam = jax.lax.stop_gradient(1 / jnp.abs(q).mean())
-        #         q_loss = lam * q_loss
-        #     actor_loss = self.config['alpha'] * bc_flow_loss + q_loss
-
-        #     mse = jnp.mean((actor_actions - batch['actions']) ** 2)
-
-        #     return actor_loss, {
-        #         'actor_loss': actor_loss,
-        #         'bc_flow_loss': bc_flow_loss,
-        #         # 'distill_loss': distill_loss,
-        #         'q_loss': q_loss,
-        #         'q': q.mean(),
-        #         'q_abs_mean': jnp.abs(q).mean(),
-        #         'mse': mse,
-        #     }
 
         # else:
         if self.config['use_latent']:
@@ -223,8 +177,8 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
             pred = self.network.select('actor_bc_flow')(batch['observations'], x_t, batch["actor_goals"], t, params=grad_params)
             bc_flow_loss = jnp.mean((pred - vel) ** 2)
             # Distillation loss.
-            rng, noise_rng = jax.random.split(rng)
-            noises = jax.random.normal(noise_rng, (batch_size, action_dim))
+            rng, a_rng = jax.random.split(rng)
+            noises = jax.random.normal(a_rng, (batch_size, action_dim))
             target_flow_actions = self.compute_flow_actions(batch['observations'], batch["actor_goals"], noises=noises)
             actor_actions = self.network.select('actor_onestep_flow')(batch['observations'],  noises, batch["actor_goals"], params=grad_params)
         
@@ -359,7 +313,6 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
         ex_observations,
         ex_actions,
         config,
-        train_steps,
     ):
         """Create a new agent.
 
@@ -376,11 +329,7 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
         ex_times = ex_actions[..., :1]
         ob_dims = ex_observations.shape[1:]
         action_dim = ex_actions.shape[-1]
-        zeta_schedule = optax.linear_schedule(
-            0.0,
-            config['zeta'],
-            train_steps,
-        )
+
 
         # Define encoders.
         encoders = dict()
@@ -397,7 +346,7 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
                 hidden_dims=config['value_hidden_dims'],
                 latent_dim=config['latent_dim'],
                 layer_norm=config['layer_norm'],
-                ensemble=True,
+                ensemble=config['ensemble'],
                 value_exp=True,
                 state_encoder=encoders.get('state'),
                 action_dim=action_dim,
@@ -406,7 +355,7 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
                 hidden_dims=config['value_hidden_dims'],
                 latent_dim=config['latent_dim'],
                 layer_norm=config['layer_norm'],
-                ensemble=True,
+                ensemble=config['ensemble'],
                 value_exp=True,
                 state_encoder=encoders.get('state'),
                 action_dim=action_dim,
@@ -416,7 +365,7 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
                 hidden_dims=config['value_hidden_dims'],
                 latent_dim=config['latent_dim'],
                 layer_norm=config['layer_norm'],
-                ensemble=True,
+                ensemble=config['ensemble'],
                 value_exp=True,
                 state_encoder=encoders.get('state'),
             )
@@ -424,7 +373,7 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
                 hidden_dims=config['value_hidden_dims'],
                 latent_dim=config['latent_dim'],
                 layer_norm=config['layer_norm'],
-                ensemble=True,
+                ensemble=config['ensemble'],
                 value_exp=True,
                 state_encoder=encoders.get('state'),
             )
@@ -466,7 +415,7 @@ class FQLTMDAgent(flax.struct.PyTreeNode):
 
         config['ob_dims'] = ob_dims
         config['action_dim'] = action_dim
-        return cls(rng, network=network, config=flax.core.FrozenDict(**config), zeta_schedule=zeta_schedule)
+        return cls(rng, network=network, config=flax.core.FrozenDict(**config))
 
 
 def get_config():
@@ -477,14 +426,15 @@ def get_config():
             action_dim=ml_collections.config_dict.placeholder(int),  # Action dimension (will be set automatically).
             lr=3e-4,  # Learning rate.
             batch_size=256,  # Batch size.
+            ensemble=True, # Whether to ensemblize
             components=8,  # Number of components in MRN.
             actor_hidden_dims=(512, 512, 512, 512),  # Actor network hidden dimensions.
-            value_hidden_dims=(512, 512, 512, 512),  # Value network hidden dimensions.
+            value_hidden_dims=(512, 512, 512),  # Value network hidden dimensions.
             latent_dim=512,  # Latent dimension for phi and psi.
             layer_norm=True,  # Whether to use layer normalization.
             actor_layer_norm=False,  # Whether to use layer normalization for the actor.
             discount=0.99,  # Discount factor.
-            tau=0.005,  # Target network update rate.
+            # tau=0.005,  # Target network update rate.
             alpha=10.0,  # BC coefficient (need to be tuned for each environment).
             flow_steps=10,  # Number of flow steps.
             normalize_q_loss=True,  # Whether to normalize the Q loss.
@@ -508,7 +458,7 @@ def get_config():
             gc_negative=False,  # Unused (defined for compatibility with GCDataset).
             p_aug=0.0,  # Probability of applying image augmentation.
             use_iqe=False,  # Whether to use IQE distance or MRN distance
-            use_latent=True, # Whether to use latent for policy action sampling
+            use_latent=False, # Whether to use latent for policy action sampling
             freeze_enc_for_actor_grad=False, # Whether to stop grad for actor when using encoder
             frame_stack=ml_collections.config_dict.placeholder(int),  # Number of frames to stack.
             use_action_for_distance=False, # Whether to use action for distance calculation

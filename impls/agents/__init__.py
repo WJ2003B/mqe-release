@@ -7,7 +7,7 @@ from agents.qrl import QRLAgent
 from agents.sac import SACAgent
 from agents.tmd import TMDAgent
 from agents.fqltmd import FQLTMDAgent
-from agents.mdw import MDWAgent
+from agents.mqe import MQEAgent
 from agents.cmd import CMDAgent
 agents = dict(
     crl=CRLAgent,
@@ -19,6 +19,6 @@ agents = dict(
     sac=SACAgent,
     tmd=TMDAgent,
     fqltmd=FQLTMDAgent,
-    mdw=MDWAgent,
+    mqe=MQEAgent,
 
 )
